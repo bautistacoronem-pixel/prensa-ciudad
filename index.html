@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prensa Ciudadana Daireaux</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración Material Design 3 en Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        md: {
+                            surface: '#FEF7FF', 
+                            primaryContainer: '#EADDFF', 
+                            onSurface: '#1D1B20',
+                            primary: '#4F378B',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fuentes y Símbolos Material -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+
+    <!-- Estilos Personalizados y Animaciones -->
+    <style>
+        body {
+            background-color: #FEF7FF; /* Fondo principal MD3 solicitado */
+            -webkit-tap-highlight-color: transparent;
+            color: #1D1B20; /* Texto principal */
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Animación Fade In Up */
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in-up {
+            opacity: 0;
+            animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        /* Shimmer Loading */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .skeleton {
+            background: #EADDFF;
+            background-image: linear-gradient(to right, #EADDFF 0%, #FEF7FF 20%, #EADDFF 40%, #EADDFF 100%);
+            background-repeat: no-repeat;
+            background-size: 1000px 100%; 
+            animation: shimmer 2s infinite linear forwards;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col selection:bg-md-primaryContainer selection:text-md-onSurface">
+
+    <!-- Encabezado con Logo SVG -->
+    <header class="sticky top-0 z-40 bg-md-surface/90 backdrop-blur-md border-b border-md-primaryContainer shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
+            <div class="animate-fade-in-up shrink-0 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10">
+                    <rect width="100" height="100" rx="24" fill="#000000" />
+                    <path d="M 32 25 H 48 C 65 25 75 35 75 50 C 75 65 65 75 48 75 H 32 Z" fill="#FFFFFF"/>
+                </svg>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-md-onSurface tracking-tight animate-fade-in-up delay-100">
+                Prensa Ciudadana Daireaux
+            </h1>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex flex-col gap-8">
+        
+        <!-- Fila Superior: Clima e Historia -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Clima (Real-time) -->
+            <div class="lg:col-span-5 bg-md-surface rounded-3xl p-6 sm:p-8 relative overflow-hidden group shadow-sm flex flex-col justify-center animate-fade-in-up delay-100 border-2 border-md-primaryContainer transition-transform duration-300 hover:scale-[1.02]">
+                <div class="absolute -right-8 -top-8 text-9xl pointer-events-none transition-transform group-hover:scale-110 opacity-5">
+                    <span class="material-symbols-outlined text-md-primary" id="weather-bg-icon">cloud</span>
+                </div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
+                            <span class="material-symbols-outlined text-md-primary">thermostat</span>
+                            Clima Actual
+                        </h2>
+                        <span class="text-xs font-bold bg-md-primaryContainer px-3 py-1 rounded-full text-md-primary shadow-sm uppercase tracking-wider">Daireaux</span>
+                    </div>
+
+                    <div id="weather-loading" class="space-y-4">
+                        <div class="h-16 w-32 skeleton rounded-2xl"></div>
+                        <div class="h-6 w-48 skeleton rounded-lg"></div>
+                    </div>
+
+                    <div id="weather-data" class="hidden">
+                        <div class="flex items-start gap-1">
+                            <span id="temp-value" class="text-7xl font-bold tracking-tighter text-md-onSurface leading-none">--</span>
+                            <span class="text-3xl font-semibold text-gray-500 mt-2">°C</span>
+                        </div>
+                        <p id="weather-desc" class="text-xl sm:text-2xl font-semibold text-gray-700 capitalize mt-3">Cargando...</p>
+                        
+                        <div class="mt-6 pt-5 border-t border-md-primaryContainer flex flex-wrap gap-3">
+                            <div class="flex items-center gap-2 text-md-onSurface bg-md-surface px-3 py-1.5 rounded-full border border-md-primaryContainer shadow-sm">
+                                <span class="material-symbols-outlined text-[18px] text-md-primary">air</span>
+                                <span id="wind-speed" class="text-sm font-medium">-- km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historia y Próceres -->
+            <div class="lg:col-span-7 bg-md-surface border-2 border-md-primaryContainer rounded-3xl p-6 lg:p-8 relative overflow-hidden flex flex-col justify-start animate-fade-in-up delay-200 shadow-sm transition-transform duration-300 hover:scale-[1.02]">
+                 <h2 class="text-2xl sm:text-3xl font-bold text-md-onSurface mb-5 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-md-primary text-3xl">history_edu</span>
+                    Nuestra Historia
+                </h2>
+                
+                <div class="text-md-onSurface/80 space-y-4 leading-relaxed sm:text-lg font-roboto mb-8">
+                    <p>
+                        Fundada el <strong>5 de julio de 1910</strong>, la ciudad fue bautizada en honor a los hermanos <strong>Émile y Honoré Daireaux</strong>, destacados estancieros y escritores franceses que impulsaron el desarrollo agrícola y cultural.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-auto">
+                    <!-- Tarjeta Emilio -->
+                    <div class="flex items-center gap-4 bg-md-surface p-3 sm:p-4 rounded-3xl border border-md-primaryContainer hover:bg-md-primaryContainer/30 transition-colors">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full overflow-hidden bg-md-primaryContainer shadow-inner">
+                            <img src="https://placehold.co/150x150/EADDFF/4F378B?text=ED" alt="Emilio Daireaux" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-lg font-bold text-md-onSurface leading-tight">Emilio Daireaux</h4>
+                            <p class="text-sm text-md-onSurface/70 mt-1">Cofundador e impulsor</p>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Honoré -->
+                    <div class="flex items-center gap-4 bg-md-surface p-3 sm:p-4 rounded-3xl border border-md-primaryContainer hover:bg-md-primaryContainer/30 transition-colors">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full overflow-hidden bg-md-primaryContainer shadow-inner">
+                            <img src="https://placehold.co/150x150/EADDFF/4F378B?text=HD" alt="Honoré Daireaux" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-lg font-bold text-md-onSurface leading-tight">Honoré Daireaux</h4>
+                            <p class="text-sm text-md-onSurface/70 mt-1">Escritor y estanciero</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Directorio Telefónico -->
+        <div class="mt-6 animate-fade-in-up delay-300">
+            <div class="flex items-center gap-3 mb-6 px-2">
+                <div class="bg-md-primaryContainer p-2.5 rounded-2xl shadow-sm text-md-primary">
+                    <span class="material-symbols-outlined text-2xl block">contact_phone</span>
+                </div>
+                <h2 class="text-2xl font-bold text-md-onSurface">Directorio Útil</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                
+                <!-- Regla Estricta: w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl -->
+                
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">account_balance</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Municipalidad</h3>
+                        <a href="tel:02316452133" class="text-sm sm:text-base font-semibold text-md-primary block truncate">02316-452133</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">diversity_3</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">DDHH y Mujeres</h3>
+                        <a href="tel:2314467467" class="text-sm sm:text-base font-semibold text-md-primary block truncate">2314-467467</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">school</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Educación</h3>
+                        <a href="tel:2314555484" class="text-sm sm:text-base font-semibold text-md-primary block truncate">2314-555484</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">local_library</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">CRUD</h3>
+                        <a href="tel:2314555484" class="text-sm sm:text-base font-semibold text-md-primary block truncate">2314-555484</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">child_care</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Jardín Maternal</h3>
+                        <div class="flex flex-col">
+                            <a href="tel:2314537453" class="text-sm font-semibold text-md-primary block truncate">2314-537453</a>
+                            <a href="tel:02316452547" class="text-sm font-semibold text-md-primary block truncate">02316-452547</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">groups</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Desarrollo Comunidad</h3>
+                        <span class="text-sm font-semibold text-md-onSurface/50 block italic">Presencial</span>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">family_restroom</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Protección Niño</h3>
+                        <div class="flex flex-col">
+                            <a href="tel:02316452254" class="text-sm font-semibold text-md-primary block truncate">02316-452254</a>
+                            <a href="tel:2314470964" class="text-sm font-semibold text-md-primary block truncate">2314-470964</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">health_and_safety</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Secretaría Salud</h3>
+                        <a href="tel:2314470968" class="text-sm font-semibold text-md-primary block truncate">2314-470968</a>
+                    </div>
+                </div>
+
+                <!-- Íconos de Hospital explícitos para las Salas -->
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">local_hospital</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Sala Ramón Carrillo</h3>
+                        <a href="tel:02316453529" class="text-sm font-semibold text-md-primary block truncate">(2316) 45-3529</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">local_hospital</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Sala Jorge O. Carlé</h3>
+                        <a href="tel:02316453516" class="text-sm font-semibold text-md-primary block truncate">(2316) 45-3516</a>
+                    </div>
+                </div>
+
+                <div class="bg-[#EADDFF]/50 p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+                    <div class="w-12 h-12 shrink-0 bg-white flex items-center justify-center rounded-2xl shadow-sm">
+                        <span class="material-symbols-outlined text-[24px] text-red-600">local_hospital</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-md-primary uppercase tracking-wider mb-1 leading-tight truncate">Hospital Municipal</h3>
+                        <div class="flex flex-col">
+                            <a href="tel:02316454292" class="text-sm font-bold text-md-onSurface block truncate">(2316) 454292</a>
+                            <a href="tel:02314516321" class="text-sm font-bold text-md-onSurface block truncate">(2314) 516321</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">local_hospital</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Arboledas Sta Máxima</h3>
+                        <a href="tel:02314407148" class="text-sm font-semibold text-md-primary block truncate">(2314) 407148</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">local_hospital</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Salazar Hospital</h3>
+                        <a href="tel:02314478136" class="text-sm font-semibold text-md-primary block truncate">(2314) 478136</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">sports_soccer</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Deportes</h3>
+                        <a href="tel:2314479710" class="text-sm font-semibold text-md-primary block truncate">2314-479710</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">palette</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Cultura</h3>
+                        <a href="tel:02316452213" class="text-sm font-semibold text-md-primary block truncate">02316-452213</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">warehouse</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Corralón</h3>
+                        <a href="tel:2314407175" class="text-sm font-semibold text-md-primary block truncate">2314-407175</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">campaign</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Prensa</h3>
+                        <a href="tel:2314447724" class="text-sm font-semibold text-md-primary block truncate">2314-447724</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">construction</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Obras Públicas</h3>
+                        <a href="tel:02316452929" class="text-sm font-semibold text-md-primary block truncate">02316-452929</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">plumbing</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Servicios Sanitarios</h3>
+                        <div class="flex flex-col">
+                            <a href="tel:02316452396" class="text-sm font-semibold text-md-primary block truncate">02316-452396</a>
+                            <a href="tel:2314531941" class="text-sm font-semibold text-md-primary block truncate"><span class="text-gray-400 font-normal text-[10px] mr-1">GUARDIA</span>2314-531941</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">elderly</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Hogar de Ancianos</h3>
+                        <div class="flex flex-col">
+                            <a href="tel:02316452323" class="text-sm font-semibold text-md-primary block truncate">02316-452323</a>
+                            <a href="tel:2314472644" class="text-sm font-semibold text-md-primary block truncate">2314-472644</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">science</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Bromatología</h3>
+                        <a href="tel:2314467226" class="text-sm font-semibold text-md-primary block truncate">2314-467226</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">storefront</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Del. Arboledas</h3>
+                        <a href="tel:2314471732" class="text-sm font-semibold text-md-primary block truncate">2314-471732</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">storefront</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Del. Salazar</h3>
+                        <a href="tel:02393492111" class="text-sm font-semibold text-md-primary block truncate">02393-492111</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">balance</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">OMIC</h3>
+                        <a href="tel:2314409424" class="text-sm font-semibold text-md-primary block truncate">2314-409424</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">menu_book</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Consejo Escolar</h3>
+                        <a href="tel:02316454292" class="text-sm font-semibold text-md-primary block truncate">02316-454292</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">gavel</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Concejo Deliberante</h3>
+                        <a href="tel:02316454099" class="text-sm font-semibold text-md-primary block truncate">02316-454099</a>
+                    </div>
+                </div>
+
+                <div class="bg-md-surface p-4 rounded-3xl border-2 border-md-primaryContainer shadow-sm hover:shadow-md transition-transform hover:scale-[1.05] flex items-center gap-4">
+                    <div class="w-12 h-12 shrink-0 bg-[#EADDFF] flex items-center justify-center rounded-2xl">
+                        <span class="material-symbols-outlined text-[24px] text-md-primary">policy</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 leading-tight truncate">Fiscalía</h3>
+                        <a href="tel:02316453039" class="text-sm font-semibold text-md-primary block truncate">02316-453039</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Mapa Google Maps -->
+        <div class="mt-6 animate-fade-in-up delay-300">
+            <h2 class="text-2xl font-bold text-md-onSurface mb-6 flex items-center gap-3 px-2">
+                 <span class="material-symbols-outlined text-md-primary text-3xl block">map</span>
+                 Plaza San Martín
+            </h2>
+            <div class="bg-md-surface p-4 sm:p-6 rounded-3xl border-2 border-md-primaryContainer shadow-sm">
+                 <div class="w-full aspect-video sm:h-[350px] rounded-2xl overflow-hidden bg-md-primaryContainer/20">
+                     <iframe 
+                        src="https://maps.google.com/maps?q=Plaza%20San%20Martin,%20Daireaux,%20Buenos%20Aires&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                     </iframe>
+                 </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t-2 border-md-primaryContainer mt-8 py-8 animate-fade-in-up delay-300">
+        <div class="max-w-7xl mx-auto px-4 text-center flex flex-col items-center gap-4">
+            
+            <!-- Botón de Contacto / Reporte -->
+            <div class="mb-4 flex flex-col items-center gap-3">
+                <p class="text-sm text-md-onSurface/70 font-semibold uppercase tracking-wider">¿Encontraste algún error o quieres sugerir algo?</p>
+                <a href="mailto:prensa.ciudad.dx@gmail.com" class="inline-flex items-center gap-2 bg-md-primaryContainer text-md-primary px-6 py-3 rounded-full font-bold hover:scale-105 hover:bg-[#D0BCFF] transition-all shadow-sm">
+                    <span class="material-symbols-outlined text-[20px]">mail</span>
+                    prensa.ciudad.dx@gmail.com
+                </a>
+            </div>
+
+            <p class="text-sm text-md-onSurface/60 font-medium">Prensa Ciudadana Daireaux &copy; 2026</p>
+        </div>
+    </footer>
+
+    <!-- Script del Clima -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=-36.6&longitude=-61.7&current=temperature_2m,wind_speed_10m,weather_code,is_day&timezone=America%2FArgentina%2FBuenos_Aires';
+
+            fetch(weatherUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error("Error obteniendo el clima");
+                    return res.json();
+                })
+                .then(data => {
+                    const current = data.current;
+                    document.getElementById('weather-loading').classList.add('hidden');
+                    document.getElementById('weather-data').classList.remove('hidden');
+
+                    document.getElementById('temp-value').textContent = Math.round(current.temperature_2m);
+                    document.getElementById('wind-speed').textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+
+                    const code = current.weather_code;
+                    const isDay = current.is_day === 1;
+                    
+                    let desc = "Despejado";
+                    let icon = isDay ? "sunny" : "clear_night";
+
+                    if (code <= 2) { 
+                        desc = code === 0 ? "Despejado" : "Nubosidad parcial"; 
+                        icon = isDay ? (code === 0 ? "sunny" : "partly_cloudy_day") : (code === 0 ? "clear_night" : "partly_cloudy_night");
+                    } else if (code === 3) { desc = "Nublado"; icon = "cloud"; } 
+                      else if (code >= 45 && code <= 48) { desc = "Niebla"; icon = "foggy"; } 
+                      else if (code >= 51 && code <= 67) { desc = "Llovizna/Lluvia"; icon = "rainy"; } 
+                      else if (code >= 71 && code <= 77) { desc = "Nieve"; icon = "cloudy_snowing"; } 
+                      else if (code >= 80 && code <= 82) { desc = "Chubascos"; icon = "rainy"; } 
+                      else if (code >= 95) { desc = "Tormenta"; icon = "thunderstorm"; }
+
+                    document.getElementById('weather-desc').textContent = desc;
+                    document.getElementById('weather-bg-icon').textContent = icon;
+                })
+                .catch(() => {
+                    document.getElementById('weather-loading').classList.add('hidden');
+                    document.getElementById('weather-data').classList.remove('hidden');
+                    document.getElementById('temp-value').textContent = "--";
+                    document.getElementById('weather-desc').textContent = "No disponible";
+                });
+        });
+    </script>
+</body>
+</html>
